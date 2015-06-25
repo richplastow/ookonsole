@@ -1,0 +1,37 @@
+{
+  "name": "ookonsole",
+  "version": "0.0.1",
+  "description": "Monitor and control an Ookive, clientside and serverside",
+  "main": "build/ookonsole.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "devDependencies": {
+    "apage": "latest",
+    "coffee-script": "latest",
+    "nodemon": "latest"
+  },
+  "scripts": {
+    "hi": "open .; open index.html; open test/run-test.html; subl .",
+    "make": "node bin/akaybe-build",
+    "index": "node_modules/apage/bin/apage -i README.md doc/*.md -o index.html -p \"`cat node_modules/apage/build/plugin/*.js`\"",
+    "test": "node test/run-test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richplastow/ookonsole.git"
+  },
+  "keywords": [
+    "Ookive",
+    "console",
+    "terminal",
+    "CoffeeScript"
+  ],
+  "author": "Rich Plastow <rich@richplastow.com> (http://richplastow.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/richplastow/ookonsole/issues"
+  },
+  "homepage": "http://ookonsole.richplastow.com/"
+}
