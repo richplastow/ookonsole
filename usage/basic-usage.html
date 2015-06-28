@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Ookonsole Basic Usage</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <script src="../build/ookonsole.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      var
+        ookonsole = new window.Ookonsole({
+          $wrap: document.body
+        })
+      ;
+      ookonsole.show();
+      //ookonsole.hide();
+      ookonsole.start();
+      //ookonsole.stop();
+    });
+  </script>
+</head>
+<body>
+  <h1>Ookonsole Basic Usage</h1>
+  <a href="../index.html">Home</a><br>
+</body>
+</html>
