@@ -94,12 +94,66 @@
       if (ªO !== typeof this.context) {
         throw Error("`config.context` is type " + (typeof this.context) + " not 'object'");
       }
+      this.unrecognized = new Task({
+        summary: "Used when the requested task does not exist",
+        details: "This task is not used directly",
+        runner: function(context, options) {
+          return "That task does not exist: type `help` to list commands";
+        }
+      });
       this.tasks = {
-        unrecognized: new Task({
-          summary: 'Used when the requested task does not exist',
-          runner: function(context, options) {
-            return 'That task does not exist';
-          }
+        help: new Task({
+          summary: "Show this help. Type `help help` for more details",
+          details: "help\n----\nA built-in ookonsole task, which shows helpful usage information. \n\nhelp         With no options, lists and summarizes all available tasks\nhelp <task>  Shows details about the given task, eg `help clear`, to \n             display details on `clear` and its options\n",
+          runner: (function(_this) {
+            return function(context, options) {
+              var name, task;
+              switch (options.length) {
+                case 0:
+                  return ((function() {
+                    var ref, results;
+                    ref = this.tasks;
+                    results = [];
+                    for (name in ref) {
+                      task = ref[name];
+                      results.push(name + ": " + task.summary);
+                    }
+                    return results;
+                  }).call(_this)).join('\n');
+                case 1:
+                  if (_this.tasks[options[0]]) {
+                    return _this.tasks[options[0]].details;
+                  } else {
+                    return "That task does not exist: type `help` to list commands";
+                  }
+                  break;
+                default:
+                  return "Too many options: try `help " + options[0] + "`";
+              }
+            };
+          })(this)
+        }),
+        clear: new Task({
+          summary: "Delete the contents of the log",
+          details: "clear\n-----\nA built-in ookonsole task, which shows helpful usage information. \n\nclear display  Clears the log display, but leaves the in-storage log intact\nclear history  Deletes the command-stack, usually accessed with up/down keys\nclear storage  Deletes localStorage (browser) or filesystem (server) logs\nclear all      All of the above\nclear          With no options, runs `clear display`\n",
+          runner: (function(_this) {
+            return function(context, options) {
+              switch (options.length) {
+                case 0:
+                  _this.$log.innerHTML = '';
+                  return false;
+                case 1:
+                  if ('display' === options[0]) {
+                    return _this.tasks.clear.runner(context, []);
+                  } else {
+                    return "@todo";
+                  }
+                  break;
+                default:
+                  return "Too many options: try `clear " + options[0] + "`";
+              }
+            };
+          })(this)
         })
       };
       if (ªU === ªtype(config.$wrap)) {
@@ -169,6 +223,7 @@
 
     Main.prototype.execute = function(command) {
       var i, result, task;
+      this.$log.innerHTML += "> " + command + "\n";
       command = command.split(' ');
       i = command.length;
       while (0 < i--) {
@@ -178,14 +233,16 @@
       }
       task = this.tasks[command.shift()];
       if (!task) {
-        task = this.tasks.unrecognized;
+        task = this.unrecognized;
       }
       result = task.runner(this.context, command);
-      return this.$log.innerHTML += result + '\n';
+      if (false !== result) {
+        return this.$log.innerHTML += (result.replace(/</g, '&lt;')) + '\n';
+      }
     };
 
     Main.prototype.getStyle = function() {
-      return ".ookonsole-box {\n  padding:    0.5rem;\n  border:     1px solid #999;\n}\n.ookonsole-log {\n  margin:     0;\n  padding:    0.5rem;\n  border:     1px solid #999;\n  font:       1.1rem/1.4rem monaco, monospace;\n}\n.ookonsole-command {\n  display:    block;\n  box-sizing: border-box;\n  width:      100%;\n  padding:    0.5rem;\n  border:     1px solid #999;\n  font:       1.1rem/1.4rem monaco, monospace;\n}";
+      return ".ookonsole-box {\n  padding:    0.5rem;\n  border:     1px solid #999;\n}\n.ookonsole-log {\n  margin:     0;\n  padding:    0.5rem;\n  border:     1px solid #999;\n  font:       1rem/1.3rem monaco, monospace;\n}\n.ookonsole-command {\n  display:    block;\n  box-sizing: border-box;\n  width:      100%;\n  padding:    0.5rem;\n  border:     1px solid #999;\n  font:       1rem/1.3rem monaco, monospace;\n}";
     };
 
     return Main;
@@ -208,6 +265,10 @@
       this.summary = config.summary;
       if (ªS !== ªtype(this.summary)) {
         throw Error("`config.summary` is type " + (ªtype(this.summary)) + " not 'string'");
+      }
+      this.details = config.details;
+      if (ªS !== ªtype(this.details)) {
+        throw Error("`config.details` is type " + (ªtype(this.details)) + " not 'string'");
       }
       this.runner = config.runner;
       if (ªF !== ªtype(this.runner)) {

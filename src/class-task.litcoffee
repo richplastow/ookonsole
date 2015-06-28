@@ -24,6 +24,15 @@ A one-line explanation, describing what this task does.
           throw Error "`config.summary` is type #{ªtype @summary} not 'string'"
 
 
+#### `details <string>`
+Detailed instructions on how to use the task, with a full explanation of its 
+options. The `help` task provides a typical example to follow. 
+
+        @details = config.details
+        if ªS != ªtype @details
+          throw Error "`config.details` is type #{ªtype @details} not 'string'"
+
+
 #### `runner <string>`
 The function to be run. It will be passed two arguments:  
 - `context <object>`

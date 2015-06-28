@@ -24,14 +24,70 @@ An optional context, which all tasks will be run in.
           throw Error "`config.context` is type #{typeof @context} not 'object'"
 
 
+#### `unrecognized <Tasks>`
+A special task, run when the requested task does not exist. 
+
+        @unrecognized = new Task
+          summary: "Used when the requested task does not exist"
+          details: "This task is not used directly"
+          runner: (context, options) ->
+            "That task does not exist: type `help` to list commands"
+
+
 #### `tasks <object of Tasks>`
 By default, `tasks` contains a few core tasks. More should be added by the app 
-which implements Ookonsole. 
+which implements Ookonsole. @todo link to examples
 
         @tasks =
-          unrecognized: new Task
-            summary: 'Used when the requested task does not exist'
-            runner: (context, options) -> 'That task does not exist'
+          help: new Task
+            summary: "Show this help. Type `help help` for more details"
+            details: """
+    help
+    ----
+    A built-in ookonsole task, which shows helpful usage information. 
+
+    help         With no options, lists and summarizes all available tasks
+    help <task>  Shows details about the given task, eg `help clear`, to 
+                 display details on `clear` and its options
+
+    """
+            runner: (context, options) => # => not ->
+              switch options.length
+                when 0
+                  ("#{name}: #{task.summary}" for name,task of @tasks).join '\n'
+                when 1
+                  if @tasks[ options[0] ]
+                    @tasks[ options[0] ].details
+                  else
+                    "That task does not exist: type `help` to list commands"
+                else
+                  "Too many options: try `help #{options[0]}`"
+          clear: new Task
+            summary: "Delete the contents of the log"
+            details: """
+    clear
+    -----
+    A built-in ookonsole task, which shows helpful usage information. 
+
+    clear display  Clears the log display, but leaves the in-storage log intact
+    clear history  Deletes the command-stack, usually accessed with up/down keys
+    clear storage  Deletes localStorage (browser) or filesystem (server) logs
+    clear all      All of the above
+    clear          With no options, runs `clear display`
+
+    """
+            runner: (context, options) => # => not ->
+              switch options.length
+                when 0
+                  @$log.innerHTML = ''
+                  false
+                when 1
+                  if 'display' == options[0]
+                    @tasks.clear.runner context, []
+                  else
+                    "@todo" #@todo `clear *`, filtered clear, range clear
+                else
+                  "Too many options: try `clear #{options[0]}`"
 
 
 #### `$wrap <HTMLElement|null>`
@@ -188,6 +244,10 @@ Parse and execute a given command.
 
       execute: (command) ->
 
+Record the command in the log. 
+
+        @$log.innerHTML += "> #{command}\n"
+
 Split the command into words, and remove extra spaces.  
 @todo allow escaped spaces, and spaces inside quotes
 
@@ -199,16 +259,17 @@ Split the command into words, and remove extra spaces.
 Deal with an unrecognized command. 
 
         task = @tasks[command.shift()]
-        if ! task then task = @tasks.unrecognized
+        if ! task then task = @unrecognized
 
 Run the command.  
 @todo `try ... catch` and deal with exceptions in a graceful way
 
         result = task.runner @context, command
 
-Display the result. 
+Display the result, unless the command explicitly returns `false` (eg `clear`). 
 
-        @$log.innerHTML += result + '\n'
+        if false != result
+          @$log.innerHTML += (result.replace /</g, '&lt;') + '\n'
 
 
 
@@ -229,7 +290,7 @@ CSS for the `<PRE>` and `<INPUT>` elements.
         margin:     0;
         padding:    0.5rem;
         border:     1px solid #999;
-        font:       1.1rem/1.4rem monaco, monospace;
+        font:       1rem/1.3rem monaco, monospace;
       }
       .ookonsole-command {
         display:    block;
@@ -237,7 +298,7 @@ CSS for the `<PRE>` and `<INPUT>` elements.
         width:      100%;
         padding:    0.5rem;
         border:     1px solid #999;
-        font:       1.1rem/1.4rem monaco, monospace;
+        font:       1rem/1.3rem monaco, monospace;
       }
       """
 
