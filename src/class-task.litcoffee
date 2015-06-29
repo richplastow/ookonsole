@@ -20,8 +20,19 @@ Properties
 A one-line explanation, describing what this task does. 
 
         @summary = config.summary
-        if ªS != ªtype @summary
-          throw Error "`config.summary` is type #{ªtype @summary} not 'string'"
+        if ªS != ªtype @summary then throw Error """
+          `config.summary` is '#{ªtype @summary}' not 'string'"""
+
+
+#### `completions <array of strings>`
+Candidates for Ookonsole’s autocomplete feature. 
+
+        @completions = config.completions
+        if ªA != ªtype @completions then throw Error """
+          `config.completions` is '#{ªtype @completions}' not 'array'"""
+        for completion in @completions
+          if ªS != ªtype completion then throw Error """
+            `config.completions` contains '#{ªtype completion}' not 'string'"""
 
 
 #### `details <string>`
@@ -29,8 +40,8 @@ Detailed instructions on how to use the task, with a full explanation of its
 options. The `help` task provides a typical example to follow. 
 
         @details = config.details
-        if ªS != ªtype @details
-          throw Error "`config.details` is type #{ªtype @details} not 'string'"
+        if ªS != ªtype @details then throw Error """
+          `config.details` is '#{ªtype @details}' not 'string'"""
 
 
 #### `runner <string>`
@@ -39,8 +50,8 @@ The function to be run. It will be passed two arguments:
 - `options <array>`
 
         @runner = config.runner
-        if ªF != ªtype @runner
-          throw Error "`config.runner` is type #{ªtype @runner} not 'function'"
+        if ªF != ªtype @runner then throw Error """
+          `config.runner` is '#{ªtype @runner}' not 'function'"""
 
 
 

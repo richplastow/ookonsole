@@ -64,6 +64,23 @@ Xx optional prefix. @todo description
 
 
 
+#### `ªcommonPrefix()`
+http://stackoverflow.com/a/1917041
+
+- `'strings'` xx
+
+    ªcommonPrefix = (strings) ->
+      a     = strings.concat().sort()
+      first = a[0]
+      last  = a[a.length-1]
+      l = first.length
+      i = 0
+      i++ while i<l and first.charAt(i) == last.charAt(i)
+      first.slice 0, i
+
+
+
+
 #### `ªredefine()`
 Convert a property to one of XX kinds:
 

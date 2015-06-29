@@ -29,6 +29,7 @@ A special task, run when the requested task does not exist.
 
         @unrecognized = new Task
           summary: "Used when the requested task does not exist"
+          completions: []
           details: "This task is not used directly"
           runner: (context, options) ->
             "That task does not exist: type `help` to list commands"
@@ -41,6 +42,7 @@ which implements Ookonsole. @todo link to examples
         @tasks =
           help: new Task
             summary: "Show this help. Type `help help` for more details"
+            completions: ['help']
             details: """
     help
     ----
@@ -64,15 +66,15 @@ which implements Ookonsole. @todo link to examples
                   "Too many options: try `help #{options[0]}`"
           clear: new Task
             summary: "Delete the contents of the log"
+            completions: ['clear display','clear storage','clear all']
             details: """
     clear
     -----
     A built-in ookonsole task, which shows helpful usage information. 
 
     clear display  Clears the log display, but leaves the in-storage log intact
-    clear history  Deletes the command-stack, usually accessed with up/down keys
     clear storage  Deletes localStorage (browser) or filesystem (server) logs
-    clear all      All of the above
+    clear all      Both of the above
     clear          With no options, runs `clear display`
 
     """
@@ -219,8 +221,14 @@ Xx.
 
 The `return` and `enter` keys execute a command. 
 
-          when 13 #@todo ENTER
+          when 13
             @execute @$command.value
+
+`tab` attempts to autocomplete the current command. 
+
+          when 9
+            @autocomplete @$command.value
+            event.preventDefault() # prevent focus moving away
 
 The `up` and `down` keys navigate through command history. 
 
@@ -237,6 +245,33 @@ Command Methods
 ---------------
 
 
+#### `autocomplete()`
+- `command <string>`
+
+Attempt to guess what the user is typing. Triggered by the `tab` key. 
+
+      autocomplete: (command) ->
+
+Get a list of candidate completions. 
+
+        candidates = []
+        for name,task of @tasks
+          for completion in task.completions
+            if (completion.slice 0, command.length) == command
+              candidates.push completion
+
+
+If there is only one possible candidate, use that. If there are two or more 
+candidates, use thier common start-string. Otherwise, do nothing. 
+
+        if 1 == candidates.length
+          @$command.value = candidates[0]
+        else if 0 != candidates.length
+          @$command.value = ªcommonPrefix candidates
+
+
+
+
 #### `execute()`
 - `command <string>`
 
@@ -244,27 +279,31 @@ Parse and execute a given command.
 
       execute: (command) ->
 
-Record the command in the log. 
+Record the command in the log, and remove it from the input field. 
 
         @$log.innerHTML += "> #{command}\n"
+        @$command.value  = ''
 
 Split the command into words, and remove extra spaces.  
 @todo allow escaped spaces, and spaces inside quotes
 
-        command = command.split ' '
-        i = command.length
+        options = command.split ' '
+        i = options.length
         while 0 < i--
-          if '' == command[i] then command.splice i, 1
+          if '' == options[i] then options.splice i, 1
+
+Get the task, and deal with a blank command. 
+
+        if options.length then task = @tasks[options.shift()] else return
 
 Deal with an unrecognized command. 
 
-        task = @tasks[command.shift()]
         if ! task then task = @unrecognized
 
 Run the command.  
 @todo `try ... catch` and deal with exceptions in a graceful way
 
-        result = task.runner @context, command
+        result = task.runner @context, options
 
 Display the result, unless the command explicitly returns `false` (eg `clear`). 
 
