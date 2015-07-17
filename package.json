@@ -1,6 +1,6 @@
 {
   "name": "ookonsole",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Monitor and control an Ookive, clientside and serverside",
   "main": "build/ookonsole.js",
   "directories": {

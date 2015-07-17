@@ -42,7 +42,7 @@ which implements Ookonsole. @todo link to examples
         @tasks =
           help: new Task
             summary: "Show this help. Type `help help` for more details"
-            completions: ['help']
+            completions: ['help '] #@todo dynamic set of 'help <task>'
             details: """
     help
     ----
