@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Ookonsole Use Existing Elements</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <script src="../build/ookonsole.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      var
+        $ = document.querySelector.bind(document),
+        ookonsole = new window.Ookonsole({
+          $display: $('#my-display'),
+          $command: $('#my-command')
+        })
+      ;
+      ookonsole.show();
+      //ookonsole.hide();
+      ookonsole.start();
+      //ookonsole.stop();
+    });
+  </script>
+</head>
+<body>
+  <h1>Ookonsole Use Existing Elements</h1>
+  <a href="../index.html">Home</a><br>
+  <pre id="my-display"></pre>
+  <input id="my-command">
+</body>
+</html>

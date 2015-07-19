@@ -81,7 +81,7 @@ which implements Ookonsole. @todo link to examples
             runner: (context, options) => # => not ->
               switch options.length
                 when 0
-                  @$log.innerHTML = ''
+                  @$display.innerHTML = ''
                   false
                 when 1
                   if 'display' == options[0]
@@ -93,9 +93,9 @@ which implements Ookonsole. @todo link to examples
 
 
 #### `$wrap <HTMLElement|null>`
-Optional HTML element which an ookonsole instance appends itself inside. 
-If not set, the ookonsole instance will continue running, but won’t display 
-anything in the document.  
+Optional HTML element which an ookonsole instance appends itself inside. If no 
+not set, and if `$display` is not set, the ookonsole instance will continue 
+running, but won’t display anything in the document.  
 @todo explain usage via browser console
 @todo explain usage via API, from elsewhere in an app’s code
 
@@ -105,6 +105,16 @@ anything in the document.
           @$wrap = config.$wrap
         else
           throw Error "`config.$wrap` is not an instance of `HTMLElement`"
+
+
+#### `$style <HTMLStyleElement|null>`
+A `<STYLE>` element which styles `$box`, `$display` and `$command` elements. 
+
+        if ! @$wrap
+          @$style = null
+        else
+          @$style = ªX.document.createElement 'style'
+          @$style.innerHTML = @getStyle()
 
 
 #### `$box <HTMLDivElement|null>`
@@ -117,32 +127,22 @@ A `<DIV>` element to contain the various ookonsole elements.
           @$box.setAttribute 'class', 'ookonsole-box'
 
 
-#### `$style <HTMLStyleElement|null>`
-A `<STYLE>` element to display log output. 
+#### `$display <HTMLPreElement|null>`
+A `<PRE>` element to display part or all of the log. 
 
         if ! @$wrap
-          @$style = null
+          @$display = config.$display or null
         else
-          @$style = ªX.document.createElement 'style'
-          @$style.innerHTML = @getStyle()
-
-
-#### `$log <HTMLPreElement|null>`
-A `<PRE>` element to display log output. 
-
-        if ! @$wrap
-          @$log = null
-        else
-          @$log = ªX.document.createElement 'pre'
-          @$log.setAttribute 'class', 'ookonsole-log'
-          @$box.appendChild @$log
+          @$display = ªX.document.createElement 'pre'
+          @$display.setAttribute 'class', 'ookonsole-display'
+          @$box.appendChild @$display
 
 
 #### `$command <HTMLInputElement|null>`
 An `<INPUT>` element to allow command-line input. 
 
         if ! @$wrap
-          @$command = null
+          @$command = config.$command or null
         else
           @$command = ªX.document.createElement 'input'
           @$command.setAttribute 'class', 'ookonsole-command'
@@ -167,12 +167,12 @@ Show and Hide Methods
 Display and remove the `<STYLE>`, `<DIV>`, `<PRE>` and `<INPUT>` elements. 
 
       show: ->
-        @$wrap.appendChild @$style
-        @$wrap.appendChild @$box
+        @$wrap?.appendChild @$style
+        @$wrap?.appendChild @$box
 
       hide: ->
-        @$wrap.removeChild @$style
-        @$wrap.removeChild @$box
+        @$wrap?.removeChild @$style
+        @$wrap?.removeChild @$box
 
 
 
@@ -188,11 +188,11 @@ Xx.
 
 Give the commend-input field focus, so the user can start typing. 
 
-        @$command.focus()
+        @$command?.focus()
 
 Certain keys have special functionality, handled by `onKeydown()`. 
 
-        @$command.addEventListener 'keydown', @onKeydown
+        @$command?.addEventListener 'keydown', @onKeydown
 
 
 
@@ -279,9 +279,10 @@ Parse and execute a given command.
 
       execute: (command) ->
 
-Record the command in the log, and remove it from the input field. 
+Record the command in the log, and remove it from the `$command` element.  
+@todo record in storage
 
-        @$log.innerHTML += "> #{command}\n"
+        @$display.innerHTML += "> #{command}\n"
         @$command.value  = ''
 
 Split the command into words, and remove extra spaces.  
@@ -308,7 +309,7 @@ Run the command.
 Display the result, unless the command explicitly returns `false` (eg `clear`). 
 
         if false != result
-          @$log.innerHTML += (result.replace /</g, '&lt;') + '\n'
+          @$display.innerHTML += (result.replace /</g, '&lt;') + '\n'
 
 
 
@@ -325,7 +326,7 @@ CSS for the `<PRE>` and `<INPUT>` elements.
         padding:    0.5rem;
         border:     1px solid #999;
       }
-      .ookonsole-log {
+      .ookonsole-display {
         margin:     0;
         padding:    0.5rem;
         border:     1px solid #999;
