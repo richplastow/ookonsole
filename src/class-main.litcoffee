@@ -150,6 +150,12 @@ An `<INPUT>` element to allow command-line input.
           @$box.appendChild @$command
 
 
+#### `$pointer <integer|null>`
+Used when the up or down keys are pressed, to step through the log history. 
+
+        @pointer = null
+
+
 
 
 Init
@@ -247,13 +253,29 @@ The `return` and `enter` keys execute a command.
             @autocomplete @$command.value
             event.preventDefault() # prevent focus moving away
 
-The `up` and `down` keys navigate through command history. 
+The `up` and `down` keys navigate through command history.  
+@todo refine this functionality, so that DOWN followed by UP does not lag
 
           when 38
-            ª 'UP'
+            log = @$display.innerHTML
+            @pointer = if null == @pointer then log.length else @pointer
+            prevCommandStart = log.lastIndexOf '§ ', @pointer
+            if -1 == prevCommandStart then return
+            prevCommandEnd = log.indexOf '\n', prevCommandStart
+            if -1 == prevCommandEnd then return
+            @pointer = prevCommandStart - 1
+            @$command.value = log.slice prevCommandStart + 2, prevCommandEnd
+            event.preventDefault() # prevent caret jumping to start of text
 
           when 40
-            ª 'DOWN'
+            log = @$display.innerHTML
+            @pointer = if null == @pointer then log.length else @pointer + 2
+            nextCommandStart = log.indexOf '§ ', @pointer
+            if -1 == nextCommandStart then return
+            nextCommandEnd = log.indexOf '\n', nextCommandStart
+            if -1 == nextCommandEnd then return
+            @pointer = nextCommandStart
+            @$command.value = log.slice nextCommandStart + 2, nextCommandEnd
 
 
 
@@ -296,10 +318,19 @@ Parse and execute a given command.
 
       execute: (command) ->
 
+Reset the log-history pointer, ready for the next time the up key is pressed. 
+
+        @pointer = null
+
+Determine whether the scrollbar is currently at (or near) the end of the log. 
+
+        hasScrolledToEnd =
+          @$display.scrollTop > @$display.scrollHeight - @$display.offsetHeight
+
 Record the command in the log, and remove it from the `$command` element.  
 @todo record in storage
 
-        @$display.innerHTML += "> #{command}\n"
+        @$display.innerHTML += "§ #{command}\n"
         @$command.value  = ''
 
 Split the command into words, and remove extra spaces.  
@@ -327,6 +358,12 @@ Display the result, unless the command explicitly returns `false` (eg `clear`).
 
         if false != result
           @$display.innerHTML += (result.replace /</g, '&lt;') + '\n'
+
+Keep the scrollbar at the end of the log, unless the user has scrolled up. 
+
+        if hasScrolledToEnd
+          @$display.scrollTop = @$display.scrollHeight
+
 
 
 

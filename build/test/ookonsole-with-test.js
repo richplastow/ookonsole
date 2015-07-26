@@ -206,6 +206,7 @@
         this.$command.setAttribute('class', 'ookonsole-command');
         this.$box.appendChild(this.$command);
       }
+      this.pointer = null;
     }
 
     Main.prototype.show = function() {
@@ -241,6 +242,7 @@
     };
 
     Main.prototype.onKeydown = function(event) {
+      var log, nextCommandEnd, nextCommandStart, prevCommandEnd, prevCommandStart;
       switch (event.keyCode) {
         case 13:
           return this.execute(this.$command.value);
@@ -248,9 +250,32 @@
           this.autocomplete(this.$command.value);
           return event.preventDefault();
         case 38:
-          return ª('UP');
+          log = this.$display.innerHTML;
+          this.pointer = null === this.pointer ? log.length : this.pointer;
+          prevCommandStart = log.lastIndexOf('§ ', this.pointer);
+          if (-1 === prevCommandStart) {
+            return;
+          }
+          prevCommandEnd = log.indexOf('\n', prevCommandStart);
+          if (-1 === prevCommandEnd) {
+            return;
+          }
+          this.pointer = prevCommandStart - 1;
+          this.$command.value = log.slice(prevCommandStart + 2, prevCommandEnd);
+          return event.preventDefault();
         case 40:
-          return ª('DOWN');
+          log = this.$display.innerHTML;
+          this.pointer = null === this.pointer ? log.length : this.pointer + 2;
+          nextCommandStart = log.indexOf('§ ', this.pointer);
+          if (-1 === nextCommandStart) {
+            return;
+          }
+          nextCommandEnd = log.indexOf('\n', nextCommandStart);
+          if (-1 === nextCommandEnd) {
+            return;
+          }
+          this.pointer = nextCommandStart;
+          return this.$command.value = log.slice(nextCommandStart + 2, nextCommandEnd);
       }
     };
 
@@ -276,8 +301,10 @@
     };
 
     Main.prototype.execute = function(command) {
-      var i, options, result, task;
-      this.$display.innerHTML += "> " + command + "\n";
+      var hasScrolledToEnd, i, options, result, task;
+      this.pointer = null;
+      hasScrolledToEnd = this.$display.scrollTop > this.$display.scrollHeight - this.$display.offsetHeight;
+      this.$display.innerHTML += "§ " + command + "\n";
       this.$command.value = '';
       options = command.split(' ');
       i = options.length;
@@ -296,7 +323,10 @@
       }
       result = task.runner(this.context, options);
       if (false !== result) {
-        return this.$display.innerHTML += (result.replace(/</g, '&lt;')) + '\n';
+        this.$display.innerHTML += (result.replace(/</g, '&lt;')) + '\n';
+      }
+      if (hasScrolledToEnd) {
+        return this.$display.scrollTop = this.$display.scrollHeight;
       }
     };
 
