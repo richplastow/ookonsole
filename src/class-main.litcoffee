@@ -64,6 +64,7 @@ which implements Ookonsole. @todo link to examples
                     "That task does not exist: type `help` to list commands"
                 else
                   "Too many options: try `help #{options[0]}`"
+
           clear: new Task
             summary: "Delete the contents of the log"
             completions: ['clear display','clear storage','clear all']
@@ -202,6 +203,22 @@ Xx.
 
       stop: ->
         ª 456
+
+
+
+
+Task Management Methods
+-----------------------
+
+
+#### `addTask()`
+- `name <string>`
+- `config <object>`
+
+Xx. 
+
+      addTask: (name, config) => # `=>` not `->`
+        @tasks[name] = new Task config
 
 
 
