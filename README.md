@@ -14,3 +14,8 @@ Ookonsole
 
 - [Basic Usage](http://ookonsole.richplastow.com/usage/basic-usage.html)
 - [Use Existing Elements](http://ookonsole.richplastow.com/usage/existing.html)
+
+
+#### Supplemental
+
+- [Initial State Experiment](http://ookonsole.richplastow.com/supplemental/01-initial-state-experiment.html)

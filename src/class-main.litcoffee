@@ -12,8 +12,8 @@ Main
 
 
 
-Properties
-----------
+Main `config` Properties
+------------------------
 
 
 #### `context <object>`
@@ -32,7 +32,7 @@ A special task, run when the requested task does not exist.
           completions: []
           details: "This task is not used directly"
           runner: (context, options) ->
-            "That task does not exist: type `help` to list commands"
+            "! That task does not exist: type `help` to list commands"
 
 
 #### `tasks <object of Tasks>`
@@ -41,7 +41,7 @@ which implements Ookonsole. @todo link to examples
 
         @tasks =
           help: new Task
-            summary: "Show this help. Type `help help` for more details"
+            summary: "Show this help, or type `help help` for more details"
             completions: ['help '] #@todo dynamic set of 'help <task>'
             details: """
     help
@@ -61,9 +61,9 @@ which implements Ookonsole. @todo link to examples
                   if @tasks[ options[0] ]
                     @tasks[ options[0] ].details
                   else
-                    "That task does not exist: type `help` to list commands"
+                    "! That task does not exist: type `help` to list commands"
                 else
-                  "Too many options: try `help #{options[0]}`"
+                  "! Too many options: try `help #{options[0]}`"
 
           clear: new Task
             summary: "Delete the contents of the log"
@@ -71,7 +71,7 @@ which implements Ookonsole. @todo link to examples
             details: """
     clear
     -----
-    A built-in ookonsole task, which shows helpful usage information. 
+    A built-in ookonsole task, which clears the log display and/or log storage. 
 
     clear display  Clears the log display, but leaves the in-storage log intact
     clear storage  Deletes localStorage (browser) or filesystem (server) logs
@@ -85,17 +85,44 @@ which implements Ookonsole. @todo link to examples
                   @$display.innerHTML = ''
                   false
                 when 1
-                  if 'display' == options[0]
+                  if 'display'      == options[0]
                     @tasks.clear.runner context, []
+                    false
+                  else if 'storage' == options[0]
+                    window.localStorage.removeItem 'ookonsole.log'
+                    "Cleared the storage"
+                  else if 'all'     == options[0]
+                    @tasks.clear.runner context, []
+                    window.localStorage.removeItem 'ookonsole.log'
+                    false
                   else
-                    "@todo" #@todo `clear *`, filtered clear, range clear
+                    "@todo More options for clear" #@todo `clear *`, filtered clear, range clear
                 else
-                  "Too many options: try `clear #{options[0]}`"
+                  "! Too many options: try `clear #{options[0]}`"
+
+
+          echo: new Task
+            summary: "Writes options to the log"
+            completions: ['echo ']
+            details: """
+    echo
+    ----
+    A built-in ookonsole task, which writes the given options to the log. 
+
+    echo                With no options, just log an empty line
+    echo <word> <word>  Each <word> is concatenated, separated by a single space
+
+    """
+            runner: (context, options) ->
+              if ! options.length
+                ""
+              else
+                options.join ' '
 
 
 #### `$wrap <HTMLElement|null>`
-Optional HTML element which an ookonsole instance appends itself inside. If no 
-not set, and if `$display` is not set, the ookonsole instance will continue 
+Optional HTML element which an ookonsole instance appends itself inside. 
+If not set, and if `$display` is not set, the ookonsole instance will continue 
 running, but won’t display anything in the document.  
 @todo explain usage via browser console
 @todo explain usage via API, from elsewhere in an app’s code
@@ -313,25 +340,24 @@ candidates, use thier common start-string. Otherwise, do nothing.
 
 #### `execute()`
 - `command <string>`
+- `config <object>`
 
 Parse and execute a given command. 
 
-      execute: (command) ->
+      execute: (command, config={ storage:'command', display:'all' }) ->
 
 Reset the log-history pointer, ready for the next time the up key is pressed. 
 
         @pointer = null
 
+Remove all text from the `$command` element.  
+
+        @$command.value = ''
+
 Determine whether the scrollbar is currently at (or near) the end of the log. 
 
         hasScrolledToEnd =
           @$display.scrollTop > @$display.scrollHeight - @$display.offsetHeight
-
-Record the command in the log, and remove it from the `$command` element.  
-@todo record in storage
-
-        @$display.innerHTML += "§ #{command}\n"
-        @$command.value  = ''
 
 Split the command into words, and remove extra spaces.  
 @todo allow escaped spaces, and spaces inside quotes
@@ -354,10 +380,52 @@ Run the command.
 
         result = task.runner @context, options
 
-Display the result, unless the command explicitly returns `false` (eg `clear`). 
+Store the command, unless the result is `false`, there was an error, or `config`
+says otherwise. Also, set `prefix` to '!' if there was an error, '§' if the 
+command has been stored, or else '>'.  
+@todo an Ookive config could allow storage of commands which cause errors  
+@todo another Ookive config could allow the error-messages to be stored, too
 
-        if false != result
-          @$display.innerHTML += (result.replace /</g, '&lt;') + '\n'
+Display nothing if the result is `false` (returned by, for example, 'clear'). 
+
+        if false == result
+          prefix = '§'
+        else if '!' == result.slice 0, 1
+          prefix = '!'
+        else if 'command' == config.storage or 'all' == config.storage
+          log = window.localStorage.getItem 'ookonsole.log'
+          window.localStorage.setItem 'ookonsole.log', "
+            #{if null == log then '' else log + '§'}#{command}"
+          prefix = '§'
+        else
+          prefix = '>'
+
+Display the command, unless `config` says otherwise. 
+
+        if 'command' == config.display or 'all' == config.display
+          @$display.innerHTML += "#{prefix} #{command}\n"
+
+Store the result, unless `config` says otherwise, or the result is `false` (for 
+example, 'clear storage'). 
+
+        #@todo
+
+Display nothing if the result is `false` (returned by, for example, 'clear'). 
+
+        if false == result
+          'noop'
+
+Display an error result (starts '!') unless `config` says otherwise. 
+
+        else if '!' == result.slice 0, 1
+          if 'none' != config.display # eg, `{ display:'error' }`
+            @$display.innerHTML += (result.replace /</g, '&lt;') + '\n'
+
+Display a successful result unless `config` says otherwise. 
+
+        else if 'result' == config.display or 'all' == config.display
+          if false != result
+            @$display.innerHTML += (result.replace /</g, '&lt;') + '\n'
 
 Keep the scrollbar at the end of the log, unless the user has scrolled up. 
 
@@ -384,7 +452,7 @@ CSS for the `<PRE>` and `<INPUT>` elements.
         margin:     0;
         padding:    0.5rem;
         border:     1px solid #999;
-        font:       1rem/1.3rem monaco, monospace;
+        font:       1em/1.4em monaco, monospace;
       }
       .ookonsole-command {
         display:    block;
@@ -392,7 +460,7 @@ CSS for the `<PRE>` and `<INPUT>` elements.
         width:      100%;
         padding:    0.5rem;
         border:     1px solid #999;
-        font:       1rem/1.3rem monaco, monospace;
+        font:       1em/1.4em monaco, monospace;
       }
       """
 

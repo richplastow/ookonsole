@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Initial State Experiment</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <script src="../build/ookonsole.js"></script>
+  <script src="01-initial-state-experiment.js"></script>
+  <script>
+    //// When the page loads, create and boot Ookonsole and AppState instances. 
+    window.addEventListener('load', function () {
+      var
+        $ = document.querySelector.bind(document)
+       ,appState  = new window.AppState({
+          $wrap: $('#app-state')
+        })
+       ,ookonsole = new window.Ookonsole({
+          $wrap: $('#ookonsole')
+         ,context: appState
+        })
+      ;
+      ookonsole.show();
+      //ookonsole.hide();
+      ookonsole.start();
+      //ookonsole.stop();
+
+      appState.ookonsole = ookonsole;
+
+      appState.show();
+      // appState.hide();
+      appState.start();
+      // appState.stop();
+
+      //// Make `execute()` available on the `window`, so links can access it. 
+      window.execute = ookonsole.execute.bind(ookonsole);
+    });
+  </script>
+  <style type="text/css">
+
+    /* LAYOUT */
+    html, body {
+      margin:     10px;
+      overflow:   hidden;
+      background: #eee;
+      color:      #111;
+    }
+    html {
+      font-size: 62.5%; /* 1em = 10px */
+    }
+    body {
+      font: 1em/1 'Arial', sans-serif;
+    }
+    @media screen and (min-width: 1265px) { /* eg 1280x800 MacBook */
+      body { font-size: 1.2em; }
+    }
+    @media screen and (min-width: 1420px) {
+      body { font-size: 1.334em; }
+    }
+    @media screen and (min-width: 1580px) {
+      body { font-size: 1.48em; }
+    }
+    @media screen and (min-width: 1745px) {
+      body { font-size: 1.65em; }
+    }
+    @media screen and (min-width: 1910px) { /* 1080p */
+      body { font-size: 1.8em; }
+    }
+
+    /* TYPOGRAPHY */
+    p {
+      font-size:   1.4em;
+      line-height: 1.4;
+    }
+    tt {
+      font: 0.9em/1 monaco, monospace;
+    }
+
+  </style>
+</head>
+<body>
+  <a href="../index.html">^ Home</a>
+  <h1>Initial State Experiment</h1>
+  <p>An early attempt to bind application state to an <tt>ookonsole</tt> 
+    instance. Here, the <tt>AppState</tt> instance contains a list of words. You
+    can <tt><a href="javascript:window.execute('add Sally');void(0)">add Sally</a></tt>,
+    or <tt><a href="javascript:window.execute('delete Fred');void(0)">delete Fred</a></tt>,
+    and the app state is updated. </p>
+  <div id="app-state"></div>
+  <div id="ookonsole"></div>
+</body>
+</html>
